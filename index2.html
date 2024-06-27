@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YOLO Object Detection</title>
+</head>
+<body>
+    <h1>YOLO Object Detection</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+
+    <script>
+    
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+            video.srcObject = stream;
+            video.play(); // Ensure video is playing
+        })
+        .catch((err) => {
+            console.error('Error accessing webcam: ' + err);
+        });
+
+    video.addEventListener('play', () => {
+        setInterval(() => {
+            if (video.paused || video.ended) return;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            fetch('process_image.php', {
+                method: 'POST',
+                body: JSON.stringify({ image: imageData }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+              .then(data => {
+                  console.log(data);
+                  // 在這裡處理 YOLO 檢測結果
+              }).catch(error => {
+                  console.error('Error:', error);
+              });
+        }, 1000); // 每秒處理一次圖像
+    });
+
+        // // 獲取視頻元素
+        // // const video = document.getElementById('video');
+
+        // // 獲取攝影機流
+        // navigator.mediaDevices.getUserMedia({ video: true })
+        //     .then((stream) => {
+        //         video.srcObject = stream;
+        //     })
+        //     .catch((err) => {
+        //         console.error('Error accessing webcam: ' + err);
+        //     });
+
+        // // 設置定時器定期截取視頻幀並發送到後端進行處理
+        // setInterval(() => {
+        //     const canvas = document.getElementById('canvas');
+        //     const context = canvas.getContext('2d');
+        //     context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        //     const imageData = canvas.toDataURL('image/jpeg');
+            
+        //     fetch('process_image.php', {
+        //         method: 'POST',
+        //         body: JSON.stringify({ image: imageData }),
+        //         headers: {
+        //             'Content-Type': 'application/json'
+        //         }
+        //     }).then(response => response.json())
+        //       .then(data => {
+        //           console.log(data);
+        //           // 在這裡處理 YOLO 檢測結果
+        //       }).catch(error => {
+        //           console.error('Error:', error);
+        //       });
+        // }, 1000);
+    </script>
+</body>
+</html>
